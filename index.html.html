@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>旅遊導航</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sky: #4fc3f7;
+    --ocean: #0277bd;
+    --sand: #fff8e1;
+    --leaf: #66bb6a;
+    --coral: #ff7043;
+    --sun: #ffca28;
+    --white: #ffffff;
+    --text: #2c3e50;
+    --text-light: #7f8c8d;
+    --card-bg: #ffffffee;
+    --shadow: 0 4px 20px rgba(2,119,189,0.13);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans TC', sans-serif;
+    background: linear-gradient(160deg, #e0f7fa 0%, #b3e5fc 40%, #e8f5e9 100%);
+    min-height: 100vh;
+    color: var(--text);
+  }
+
+  /* Decorative blobs */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -80px; right: -80px;
+    width: 320px; height: 320px;
+    background: radial-gradient(circle, #fff9c4aa 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: -60px; left: -60px;
+    width: 260px; height: 260px;
+    background: radial-gradient(circle, #b2dfdbaa 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  header {
+    position: relative; z-index: 1;
+    text-align: center;
+    padding: 40px 20px 24px;
+  }
+
+  .header-icon {
+    font-size: 48px;
+    display: block;
+    animation: float 3s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  header h1 {
+    font-family: 'Nunito', sans-serif;
+    font-size: clamp(24px, 6vw, 36px);
+    font-weight: 800;
+    color: var(--ocean);
+    letter-spacing: 1px;
+    margin-top: 6px;
+  }
+
+  header p {
+    color: var(--text-light);
+    font-size: 14px;
+    margin-top: 6px;
+  }
+
+  /* Config bar */
+  .config-bar {
+    position: relative; z-index: 1;
+    max-width: 680px;
+    margin: 0 auto 24px;
+    padding: 0 16px;
+  }
+
+  .config-card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 16px 20px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: flex-end;
+  }
+
+  .config-group {
+    flex: 1;
+    min-width: 160px;
+  }
+
+  .config-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ocean);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+
+  .config-group input, .config-group select {
+    width: 100%;
+    padding: 9px 12px;
+    border: 2px solid #b3e5fc;
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: 'Noto Sans TC', sans-serif;
+    color: var(--text);
+    background: #f0faff;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .config-group input:focus, .config-group select:focus {
+    border-color: var(--sky);
+  }
+
+  .load-btn {
+    background: linear-gradient(135deg, var(--sky), var(--ocean));
+    color: white;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    font-family: 'Nunito', sans-serif;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(2,119,189,0.3);
+    transition: transform 0.15s, box-shadow 0.15s;
+    white-space: nowrap;
+  }
+  .load-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(2,119,189,0.4); }
+  .load-btn:active { transform: translateY(0); }
+
+  /* Status */
+  .status {
+    position: relative; z-index: 1;
+    text-align: center;
+    padding: 12px;
+    font-size: 14px;
+    color: var(--text-light);
+    min-height: 40px;
+  }
+  .status.error { color: var(--coral); font-weight: 600; }
+  .status.loading { color: var(--ocean); }
+
+  /* Spinner */
+  .spinner {
+    display: inline-block;
+    width: 18px; height: 18px;
+    border: 3px solid #b3e5fc;
+    border-top-color: var(--ocean);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    vertical-align: middle;
+    margin-right: 8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Grid */
+  .grid {
+    position: relative; z-index: 1;
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 0 16px 40px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+  }
+
+  /* Card */
+  .place-card {
+    background: var(--card-bg);
+    border-radius: 18px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: 2px solid transparent;
+    position: relative;
+    overflow: hidden;
+    animation: slideUp 0.4s ease both;
+  }
+  .place-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 28px rgba(2,119,189,0.2);
+    border-color: var(--sky);
+  }
+  .place-card:active { transform: scale(0.97); }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .card-icon {
+    width: 52px; height: 52px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #e0f7fa, #b3e5fc);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(2,119,189,0.15);
+  }
+
+  .card-body { flex: 1; min-width: 0; }
+
+  .card-place {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 4px;
+  }
+
+  .card-parking {
+    font-size: 12px;
+    color: var(--text-light);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .card-parking::before { content: '🅿️'; font-size: 11px; }
+
+  .card-arrow {
+    font-size: 20px;
+    color: var(--sky);
+    flex-shrink: 0;
+  }
+
+  /* Row number badge */
+  .card-num {
+    position: absolute;
+    top: 10px; right: 12px;
+    font-size: 11px;
+    color: #b0bec5;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+  }
+
+  /* Empty state */
+  .empty {
+    position: relative; z-index: 1;
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-light);
+  }
+  .empty .emoji { font-size: 56px; display: block; margin-bottom: 16px; }
+  .empty h3 { font-size: 18px; color: var(--ocean); margin-bottom: 8px; }
+
+  /* Tip */
+  .tip {
+    position: relative; z-index: 1;
+    max-width: 680px;
+    margin: 0 auto 8px;
+    padding: 0 16px;
+    font-size: 12px;
+    color: var(--text-light);
+    text-align: center;
+  }
+  .tip span { background: #fff9c4; border-radius: 6px; padding: 2px 8px; }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="header-icon">✈️</span>
+  <h1>旅遊行程導航</h1>
+  <p>點擊地點即可開啟 Google Maps 汽車導航</p>
+</header>
+
+<div class="config-bar">
+  <div class="config-card">
+    <div class="config-group" style="flex:2; min-width:200px;">
+      <label>試算表 ID</label>
+      <input type="text" id="sheetId" placeholder="貼上 Google 試算表 ID" value="1Ui5PbkexOcy7Y6p-X-XX3aAQCmuh16W9aiWWm5HqQJA">
+    </div>
+    <div class="config-group" style="flex:1; min-width:120px;">
+      <label>工作表名稱</label>
+      <input type="text" id="sheetName" placeholder="例如：工作表1" value="工作表1">
+    </div>
+    <button class="load-btn" onclick="loadSheet()">📍 載入行程</button>
+  </div>
+</div>
+
+<div class="status" id="status"></div>
+
+<div class="tip" id="tip" style="display:none">
+  <span>💡 點擊任一地點卡片，即可在 Google Maps 開始汽車導航</span>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<script>
+const ICONS = ['🏯','🌸','⛩️','🗻','🌊','🍜','🎑','🌺','🗺️','🏖️','🌿','🎋','🦋','🌅','🏔️','🎠'];
+
+function getIcon(index) {
+  return ICONS[index % ICONS.length];
+}
+
+function buildMapsUrl(destination) {
+  const enc = encodeURIComponent(destination.trim());
+  return `https://www.google.com/maps/dir/?api=1&destination=${enc}&travelmode=driving`;
+}
+
+async function loadSheet() {
+  const sheetId = document.getElementById('sheetId').value.trim();
+  const sheetName = document.getElementById('sheetName').value.trim() || '工作表1';
+  const status = document.getElementById('status');
+  const grid = document.getElementById('grid');
+  const tip = document.getElementById('tip');
+
+  if (!sheetId) {
+    status.textContent = '請輸入試算表 ID';
+    status.className = 'status error';
+    return;
+  }
+
+  status.innerHTML = '<span class="spinner"></span>讀取行程資料中...';
+  status.className = 'status loading';
+  grid.innerHTML = '';
+  tip.style.display = 'none';
+
+  const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
+
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('無法讀取試算表，請確認 ID 正確且已設為公開');
+    const text = await res.text();
+
+    // gviz 回傳格式是 google.visualization.Query.setResponse({...})
+    const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
+    const rows = json.table.rows;
+    const cols = json.table.cols;
+
+    if (!rows || rows.length === 0) {
+      status.textContent = '試算表內沒有資料';
+      status.className = 'status error';
+      return;
+    }
+
+    // 找欄位：第一列是標題，跳過
+    // A欄 = index 0 (景點), B欄 = index 1 (停車場/導航)
+    const dataRows = rows.slice(1); // 跳過標題列
+    const places = dataRows
+      .map((row, i) => {
+        const placeCell = row.c[0];
+        const navCell   = row.c[1];
+        const place = placeCell && placeCell.v ? String(placeCell.v).trim() : '';
+        const nav   = navCell   && navCell.v   ? String(navCell.v).trim()   : '';
+        return { place, nav, index: i };
+      })
+      .filter(r => r.place || r.nav);
+
+    if (places.length === 0) {
+      status.textContent = '找不到任何地點資料';
+      status.className = 'status error';
+      return;
+    }
+
+    status.textContent = `✅ 已載入 ${places.length} 個地點`;
+    status.className = 'status';
+    tip.style.display = 'block';
+
+    grid.innerHTML = '';
+    places.forEach((item, i) => {
+      const destination = item.nav || item.place;
+      const displayName = item.place || item.nav;
+      const mapsUrl = buildMapsUrl(destination);
+
+      const card = document.createElement('a');
+      card.className = 'place-card';
+      card.href = mapsUrl;
+      // iOS Safari 在 _blank 有時會被擋，用 _self 在手機上體驗更好
+      card.target = '_blank';
+      card.rel = 'noopener';
+      card.style.animationDelay = `${i * 0.05}s`;
+
+      card.innerHTML = `
+        <div class="card-icon">${getIcon(i)}</div>
+        <div class="card-body">
+          <div class="card-place">${escHtml(displayName)}</div>
+          ${item.nav && item.nav !== item.place
+            ? `<div class="card-parking">${escHtml(item.nav)}</div>`
+            : `<div class="card-parking" style="color:#aaa">點擊開始導航</div>`
+          }
+        </div>
+        <div class="card-arrow">›</div>
+        <div class="card-num">#${i + 1}</div>
+      `;
+      grid.appendChild(card);
+    });
+
+  } catch (e) {
+    status.textContent = `❌ ${e.message || '讀取失敗，請確認試算表已設為公開'}`;
+    status.className = 'status error';
+  }
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// 自動載入
+window.addEventListener('DOMContentLoaded', loadSheet);
+</script>
+</body>
+</html>
