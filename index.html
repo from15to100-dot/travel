@@ -23,6 +23,8 @@
     background: linear-gradient(160deg, #e0f7fa 0%, #b3e5fc 40%, #e8f5e9 100%);
     min-height: 100vh;
     color: var(--text);
+    display: flex;
+    flex-direction: column;
   }
 
   body::before {
@@ -40,115 +42,103 @@
     border-radius: 50%; pointer-events: none; z-index: 0;
   }
 
+  /* ── Header ── */
   header {
     position: relative; z-index: 1;
     text-align: center;
-    padding: 36px 20px 20px;
+    padding: 32px 20px 16px;
   }
   .header-icon {
-    font-size: 48px; display: block;
+    font-size: 44px; display: block;
     animation: float 3s ease-in-out infinite;
   }
   @keyframes float {
     0%,100% { transform: translateY(0); }
-    50% { transform: translateY(-8px); }
+    50%      { transform: translateY(-8px); }
   }
   header h1 {
     font-family: 'Nunito', sans-serif;
-    font-size: clamp(22px, 6vw, 34px);
+    font-size: clamp(20px, 5vw, 30px);
     font-weight: 800; color: var(--ocean);
-    letter-spacing: 1px; margin-top: 6px;
+    letter-spacing: 1px; margin-top: 4px;
   }
-  header p { color: var(--text-light); font-size: 13px; margin-top: 5px; }
+  header p { color: var(--text-light); font-size: 12px; margin-top: 4px; }
 
-  /* Config */
-  .config-bar {
+  /* ── Day Tabs ── */
+  .day-tabs {
     position: relative; z-index: 1;
-    max-width: 600px; margin: 0 auto 20px; padding: 0 16px;
+    max-width: 600px; margin: 0 auto 4px;
+    padding: 0 16px;
+    display: flex; gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
   }
-  .config-card {
-    background: var(--card-bg); border-radius: 16px;
-    padding: 14px 18px; box-shadow: var(--shadow);
-    display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end;
-  }
-  .config-group { flex: 1; min-width: 160px; }
-  .config-group label {
-    display: block; font-size: 11px; font-weight: 700;
-    color: var(--ocean); text-transform: uppercase;
-    letter-spacing: 0.5px; margin-bottom: 5px;
-  }
-  .config-group input {
-    width: 100%; padding: 8px 11px;
-    border: 2px solid #b3e5fc; border-radius: 10px;
-    font-size: 13px; font-family: 'Noto Sans TC', sans-serif;
-    color: var(--text); background: #f0faff; outline: none;
-    transition: border-color 0.2s;
-  }
-  .config-group input:focus { border-color: var(--sky); }
 
-  .load-btn {
+  .day-tab {
+    flex: 1; min-width: 100px; max-width: 180px;
+    padding: 10px 14px;
+    border: 2px solid #b3e5fc;
+    border-radius: 14px;
+    background: var(--card-bg);
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px; font-weight: 700;
+    color: var(--ocean);
+    cursor: pointer;
+    text-align: center;
+    box-shadow: var(--shadow);
+    transition: all 0.18s;
+    line-height: 1.3;
+  }
+  .day-tab:hover {
+    background: #e0f7fa;
+    border-color: var(--sky);
+    transform: translateY(-2px);
+  }
+  .day-tab.active {
     background: linear-gradient(135deg, var(--sky), var(--ocean));
-    color: white; border: none; padding: 9px 20px;
-    border-radius: 10px; font-size: 14px; font-weight: 700;
-    font-family: 'Nunito', sans-serif; cursor: pointer;
-    box-shadow: 0 4px 12px rgba(2,119,189,0.3);
-    transition: transform 0.15s, box-shadow 0.15s; white-space: nowrap;
+    border-color: transparent;
+    color: white;
+    box-shadow: 0 4px 14px rgba(2,119,189,0.35);
+    transform: translateY(-2px);
   }
-  .load-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(2,119,189,0.4); }
-  .load-btn:active { transform: translateY(0); }
+  .day-tab .tab-date { font-size: 13px; opacity: 0.85; }
+  .day-tab.skeleton { background: #e0f0fa; border-color: #cce; color: #aac; cursor: default; }
 
-  /* Status */
+  /* ── Status ── */
   .status {
     position: relative; z-index: 1;
-    text-align: center; padding: 10px; font-size: 13px;
-    color: var(--text-light); min-height: 36px;
+    text-align: center; padding: 8px 16px;
+    font-size: 13px; color: var(--text-light); min-height: 32px;
   }
   .status.error { color: var(--coral); font-weight: 600; }
   .status.loading { color: var(--ocean); }
 
   .spinner {
-    display: inline-block; width: 16px; height: 16px;
+    display: inline-block; width: 15px; height: 15px;
     border: 3px solid #b3e5fc; border-top-color: var(--ocean);
     border-radius: 50%; animation: spin 0.8s linear infinite;
     vertical-align: middle; margin-right: 6px;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* Layout */
-  .days-wrapper {
+  /* ── Content ── */
+  .content {
     position: relative; z-index: 1;
-    max-width: 600px; margin: 0 auto; padding: 0 16px 40px;
+    flex: 1;
+    max-width: 600px; width: 100%;
+    margin: 0 auto; padding: 8px 16px 16px;
   }
 
-  .day-section { margin-bottom: 28px; }
-
-  .day-header {
-    display: flex; align-items: center;
-    gap: 10px; margin-bottom: 12px;
-  }
-  .day-badge {
-    background: linear-gradient(135deg, var(--sky), var(--ocean));
-    color: white; font-family: 'Nunito', sans-serif;
-    font-weight: 800; font-size: 15px;
-    padding: 5px 16px; border-radius: 20px;
-    box-shadow: 0 3px 10px rgba(2,119,189,0.3); white-space: nowrap;
-  }
-  .day-line {
-    flex: 1; height: 2px;
-    background: linear-gradient(to right, #b3e5fc, transparent);
-    border-radius: 2px;
-  }
-
-  /* Card */
+  /* ── Cards ── */
   .place-card {
     background: var(--card-bg); border-radius: 16px;
-    padding: 16px 18px; box-shadow: var(--shadow);
+    padding: 15px 18px; box-shadow: var(--shadow);
     cursor: pointer; text-decoration: none; color: inherit;
     display: flex; align-items: center; gap: 14px;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: transform 0.18s, box-shadow 0.18s;
     border: 2px solid transparent;
     margin-bottom: 10px;
-    animation: slideUp 0.4s ease both;
+    animation: slideUp 0.35s ease both;
   }
   .place-card:hover {
     transform: translateY(-3px);
@@ -158,7 +148,7 @@
   .place-card:active { transform: scale(0.98); }
 
   @keyframes slideUp {
-    from { opacity: 0; transform: translateY(16px); }
+    from { opacity: 0; transform: translateY(14px); }
     to   { opacity: 1; transform: translateY(0); }
   }
 
@@ -178,19 +168,46 @@
     font-size: 12px; color: var(--text-light); margin-top: 3px;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  .card-parking {
-    font-size: 11px; color: #90caf9; margin-top: 2px;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-  .card-parking::before { content: '🅿️ '; }
   .card-arrow { font-size: 22px; color: var(--sky); flex-shrink: 0; }
 
-  .tip {
+  /* ── Bottom config ── */
+  .bottom-bar {
     position: relative; z-index: 1;
-    max-width: 600px; margin: 0 auto 8px; padding: 0 16px;
-    font-size: 12px; color: var(--text-light); text-align: center;
+    max-width: 600px; margin: 0 auto; padding: 0 16px 28px;
   }
-  .tip span { background: #fff9c4; border-radius: 6px; padding: 2px 8px; }
+  .bottom-card {
+    background: #ffffffcc; border-radius: 14px;
+    padding: 12px 16px; box-shadow: var(--shadow);
+    display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;
+  }
+  .bottom-card label {
+    display: block; font-size: 11px; font-weight: 700;
+    color: var(--ocean); text-transform: uppercase;
+    letter-spacing: 0.5px; margin-bottom: 4px;
+  }
+  .bottom-card input {
+    flex: 1; min-width: 160px;
+    padding: 7px 11px; border: 2px solid #b3e5fc; border-radius: 10px;
+    font-size: 12px; font-family: 'Noto Sans TC', sans-serif;
+    color: var(--text); background: #f0faff; outline: none;
+    transition: border-color 0.2s;
+  }
+  .bottom-card input:focus { border-color: var(--sky); }
+  .reload-btn {
+    background: linear-gradient(135deg, var(--sky), var(--ocean));
+    color: white; border: none; padding: 8px 18px;
+    border-radius: 10px; font-size: 13px; font-weight: 700;
+    font-family: 'Nunito', sans-serif; cursor: pointer;
+    box-shadow: 0 3px 10px rgba(2,119,189,0.3);
+    transition: transform 0.15s; white-space: nowrap;
+  }
+  .reload-btn:hover { transform: translateY(-2px); }
+
+  .empty-msg {
+    text-align: center; padding: 40px 20px;
+    color: var(--text-light); font-size: 14px;
+  }
+  .empty-msg .e { font-size: 40px; display: block; margin-bottom: 10px; }
 </style>
 </head>
 <body>
@@ -201,54 +218,101 @@
   <p>點擊地點即可開啟 Google Maps 汽車導航</p>
 </header>
 
-<div class="config-bar">
-  <div class="config-card">
-    <div class="config-group" style="flex:2; min-width:180px;">
-      <label>試算表 ID</label>
-      <input type="text" id="sheetId" value="1Ui5PbkexOcy7Y6p-X-XX3aAQCmuh16W9aiWWm5HqQJA" placeholder="貼上 Google 試算表 ID">
-    </div>
-    <button class="load-btn" onclick="loadSheet()">📍 載入行程</button>
-  </div>
+<!-- Day Tabs (populated after load) -->
+<div class="day-tabs" id="dayTabs">
+  <div class="day-tab skeleton">載入中...</div>
 </div>
 
 <div class="status" id="status"></div>
 
-<div class="tip" id="tip" style="display:none">
-  <span>💡 點擊任一地點卡片，即可在 Google Maps 開始汽車導航</span>
-</div>
+<div class="content" id="content"></div>
 
-<div class="days-wrapper" id="daysWrapper"></div>
+<!-- Sheet ID at bottom -->
+<div class="bottom-bar">
+  <div class="bottom-card">
+    <div style="flex:1; min-width:160px;">
+      <label>試算表 ID</label>
+      <input type="text" id="sheetId" value="1Ui5PbkexOcy7Y6p-X-XX3aAQCmuh16W9aiWWm5HqQJA" placeholder="Google 試算表 ID">
+    </div>
+    <button class="reload-btn" onclick="loadSheet()">🔄 重新載入</button>
+  </div>
+</div>
 
 <script>
 const ICONS = ['🏯','🌸','⛩️','🗻','🌊','🍜','🎑','🌺','🗺️','🏖️','🌿','🎋','🦋','🌅','🏔️','🎠','🎪','🌾','🦅','🐚'];
 
-// 欄位組定義：每天 4 欄（景點, 導航, 品項, 花費）
-// A=0, B=1, C=2, D=3 → 第一天
-// E=4, F=5, G=6, H=7 → 第二天
-// I=8, J=9, K=10      → 第三天
+// 每天欄位：[景點, 導航(停車), 品項]
 const DAY_COLS = [
-  { place: 0, nav: 1, note: 2 },
-  { place: 4, nav: 5, note: 6 },
-  { place: 8, nav: 9, note: 10 },
+  { place: 0, nav: 1, note: 2 },  // A, B, C
+  { place: 4, nav: 5, note: 6 },  // E, F, G
+  { place: 8, nav: 9, note: 10 }, // I, J, K
 ];
+
+let allDays = []; // [{ date, places:[{place,nav,note}] }]
+let activeDay = 0;
 
 function buildMapsUrl(dest) {
   return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(dest.trim())}&travelmode=driving`;
 }
+function esc(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function getIcon(i) { return ICONS[i % ICONS.length]; }
 
-function escHtml(str) {
-  return String(str)
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function renderTabs() {
+  const tabs = document.getElementById('dayTabs');
+  tabs.innerHTML = '';
+  allDays.forEach((day, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'day-tab' + (i === activeDay ? ' active' : '');
+    btn.innerHTML = `<div>第 ${i+1} 天</div><div class="tab-date">${esc(day.date)}</div>`;
+    btn.onclick = () => switchDay(i);
+    tabs.appendChild(btn);
+  });
 }
 
-function getIcon(i) { return ICONS[i % ICONS.length]; }
+function switchDay(idx) {
+  activeDay = idx;
+  renderTabs();
+  renderCards();
+}
+
+function renderCards() {
+  const content = document.getElementById('content');
+  const day = allDays[activeDay];
+  if (!day || day.places.length === 0) {
+    content.innerHTML = '<div class="empty-msg"><span class="e">🗺️</span>這天沒有行程資料</div>';
+    return;
+  }
+  content.innerHTML = '';
+  day.places.forEach((item, i) => {
+    const dest = item.nav || item.place;
+    const displayName = item.place || item.nav;
+
+    const card = document.createElement('a');
+    card.className = 'place-card';
+    card.href = buildMapsUrl(dest);
+    card.target = '_blank';
+    card.rel = 'noopener';
+    card.style.animationDelay = `${i * 0.05}s`;
+
+    card.innerHTML = `
+      <div class="card-icon">${getIcon(i)}</div>
+      <div class="card-body">
+        <div class="card-place">${esc(displayName)}</div>
+        ${item.note ? `<div class="card-note">📝 ${esc(item.note)}</div>` : ''}
+      </div>
+      <div class="card-arrow">›</div>
+    `;
+    content.appendChild(card);
+  });
+}
 
 async function loadSheet() {
   const sheetId = document.getElementById('sheetId').value.trim();
   const status  = document.getElementById('status');
-  const wrapper = document.getElementById('daysWrapper');
-  const tip     = document.getElementById('tip');
+  const tabs    = document.getElementById('dayTabs');
+  const content = document.getElementById('content');
 
   if (!sheetId) {
     status.textContent = '請輸入試算表 ID';
@@ -256,10 +320,10 @@ async function loadSheet() {
     return;
   }
 
+  tabs.innerHTML = '<div class="day-tab skeleton">載入中...</div>';
+  content.innerHTML = '';
   status.innerHTML = '<span class="spinner"></span>讀取行程資料中...';
   status.className = 'status loading';
-  wrapper.innerHTML = '';
-  tip.style.display = 'none';
 
   const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
 
@@ -270,92 +334,46 @@ async function loadSheet() {
     const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
     const rows = json.table.rows;
 
-    if (!rows || rows.length < 2) {
-      status.textContent = '試算表內沒有資料';
-      status.className = 'status error';
-      return;
-    }
+    if (!rows || rows.length < 2) throw new Error('試算表內沒有資料');
 
-    const headerRow = rows[0];  // 第一列：日期
-    const dataRows  = rows.slice(1);  // 其餘列：地點
+    const headerRow = rows[0];
+    const dataRows  = rows.slice(1);
 
-    let totalCount = 0;
-    let iconIdx = 0;
+    allDays = [];
 
-    DAY_COLS.forEach((cols, dayIdx) => {
-      // 日期從第一列取
-      const dateCell = headerRow.c[cols.place];
-      const dateVal  = dateCell && dateCell.v ? String(dateCell.v).trim() : '';
-      if (!dateVal) return; // 該天沒有日期，跳過
+    DAY_COLS.forEach((cols) => {
+      const dc = headerRow.c[cols.place];
+      const dateVal = dc && dc.v ? String(dc.v).trim() : '';
+      if (!dateVal) return;
 
-      // 收集地點
       const places = [];
       dataRows.forEach(row => {
-        const pc = row.c && row.c[cols.place] ? row.c[cols.place] : null;
-        const nc = row.c && row.c[cols.nav]   ? row.c[cols.nav]   : null;
-        const tc = row.c && row.c[cols.note]  ? row.c[cols.note]  : null;
-
-        const place = pc && pc.v ? String(pc.v).trim() : '';
-        const nav   = nc && nc.v ? String(nc.v).trim() : '';
-        const note  = tc && tc.v ? String(tc.v).trim() : '';
-
+        const pc = row.c?.[cols.place];
+        const nc = row.c?.[cols.nav];
+        const tc = row.c?.[cols.note];
+        const place = pc?.v ? String(pc.v).trim() : '';
+        const nav   = nc?.v ? String(nc.v).trim() : '';
+        const note  = tc?.v ? String(tc.v).trim() : '';
         if (place || nav) places.push({ place, nav, note });
       });
 
-      if (places.length === 0) return;
-      totalCount += places.length;
-
-      // 建立 section
-      const section = document.createElement('div');
-      section.className = 'day-section';
-      section.innerHTML = `
-        <div class="day-header">
-          <div class="day-badge">📅 ${escHtml(dateVal)}</div>
-          <div class="day-line"></div>
-        </div>
-      `;
-
-      places.forEach((item) => {
-        const dest        = item.nav || item.place;
-        const displayName = item.place || item.nav;
-
-        const card = document.createElement('a');
-        card.className = 'place-card';
-        card.href      = buildMapsUrl(dest);
-        card.target    = '_blank';
-        card.rel       = 'noopener';
-        card.style.animationDelay = `${iconIdx * 0.04}s`;
-
-        card.innerHTML = `
-          <div class="card-icon">${getIcon(iconIdx)}</div>
-          <div class="card-body">
-            <div class="card-place">${escHtml(displayName)}</div>
-            ${item.note ? `<div class="card-note">📝 ${escHtml(item.note)}</div>` : ''}
-            ${item.nav && item.nav !== item.place ? `<div class="card-parking">${escHtml(item.nav)}</div>` : ''}
-          </div>
-          <div class="card-arrow">›</div>
-        `;
-
-        section.appendChild(card);
-        iconIdx++;
-      });
-
-      wrapper.appendChild(section);
+      allDays.push({ date: dateVal, places });
     });
 
-    if (totalCount === 0) {
-      status.textContent = '找不到任何地點資料';
-      status.className = 'status error';
-      return;
-    }
+    if (allDays.length === 0) throw new Error('找不到任何行程資料');
 
-    status.textContent = `✅ 已載入 ${totalCount} 個地點`;
+    activeDay = 0;
+    let total = allDays.reduce((s, d) => s + d.places.length, 0);
+    status.textContent = `✅ 已載入 ${allDays.length} 天、${total} 個地點`;
     status.className = 'status';
-    tip.style.display = 'block';
+
+    renderTabs();
+    renderCards();
 
   } catch(e) {
-    status.textContent = `❌ ${e.message || '讀取失敗'}`;
+    status.textContent = `❌ ${e.message}`;
     status.className = 'status error';
+    tabs.innerHTML = '';
   }
 }
 
