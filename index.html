@@ -301,8 +301,6 @@ function buildMapsUrl(dest) {
 function esc(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-function getIcon(i) { return ICONS[i % ICONS.length]; }
-
 function renderTabs() {
   const tabs = document.getElementById('dayTabs');
   tabs.innerHTML = '';
