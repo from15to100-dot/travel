@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>旅遊行程導航</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sky: #4fc3f7;
+    --ocean: #0277bd;
+    --coral: #ff7043;
+    --text: #2c3e50;
+    --text-light: #7f8c8d;
+    --card-bg: #ffffffee;
+    --shadow: 0 4px 20px rgba(2,119,189,0.13);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans TC', sans-serif;
+    background: linear-gradient(160deg, #e0f7fa 0%, #b3e5fc 40%, #e8f5e9 100%);
+    min-height: 100vh;
+    color: var(--text);
+  }
+
+  body::before {
+    content: '';
+    position: fixed; top: -80px; right: -80px;
+    width: 320px; height: 320px;
+    background: radial-gradient(circle, #fff9c4aa 0%, transparent 70%);
+    border-radius: 50%; pointer-events: none; z-index: 0;
+  }
+  body::after {
+    content: '';
+    position: fixed; bottom: -60px; left: -60px;
+    width: 260px; height: 260px;
+    background: radial-gradient(circle, #b2dfdbaa 0%, transparent 70%);
+    border-radius: 50%; pointer-events: none; z-index: 0;
+  }
+
+  header {
+    position: relative; z-index: 1;
+    text-align: center;
+    padding: 36px 20px 20px;
+  }
+  .header-icon {
+    font-size: 48px; display: block;
+    animation: float 3s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+  header h1 {
+    font-family: 'Nunito', sans-serif;
+    font-size: clamp(22px, 6vw, 34px);
+    font-weight: 800; color: var(--ocean);
+    letter-spacing: 1px; margin-top: 6px;
+  }
+  header p { color: var(--text-light); font-size: 13px; margin-top: 5px; }
+
+  /* Config */
+  .config-bar {
+    position: relative; z-index: 1;
+    max-width: 600px; margin: 0 auto 20px; padding: 0 16px;
+  }
+  .config-card {
+    background: var(--card-bg); border-radius: 16px;
+    padding: 14px 18px; box-shadow: var(--shadow);
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end;
+  }
+  .config-group { flex: 1; min-width: 160px; }
+  .config-group label {
+    display: block; font-size: 11px; font-weight: 700;
+    color: var(--ocean); text-transform: uppercase;
+    letter-spacing: 0.5px; margin-bottom: 5px;
+  }
+  .config-group input {
+    width: 100%; padding: 8px 11px;
+    border: 2px solid #b3e5fc; border-radius: 10px;
+    font-size: 13px; font-family: 'Noto Sans TC', sans-serif;
+    color: var(--text); background: #f0faff; outline: none;
+    transition: border-color 0.2s;
+  }
+  .config-group input:focus { border-color: var(--sky); }
+
+  .load-btn {
+    background: linear-gradient(135deg, var(--sky), var(--ocean));
+    color: white; border: none; padding: 9px 20px;
+    border-radius: 10px; font-size: 14px; font-weight: 700;
+    font-family: 'Nunito', sans-serif; cursor: pointer;
+    box-shadow: 0 4px 12px rgba(2,119,189,0.3);
+    transition: transform 0.15s, box-shadow 0.15s; white-space: nowrap;
+  }
+  .load-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(2,119,189,0.4); }
+  .load-btn:active { transform: translateY(0); }
+
+  /* Status */
+  .status {
+    position: relative; z-index: 1;
+    text-align: center; padding: 10px; font-size: 13px;
+    color: var(--text-light); min-height: 36px;
+  }
+  .status.error { color: var(--coral); font-weight: 600; }
+  .status.loading { color: var(--ocean); }
+
+  .spinner {
+    display: inline-block; width: 16px; height: 16px;
+    border: 3px solid #b3e5fc; border-top-color: var(--ocean);
+    border-radius: 50%; animation: spin 0.8s linear infinite;
+    vertical-align: middle; margin-right: 6px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Layout */
+  .days-wrapper {
+    position: relative; z-index: 1;
+    max-width: 600px; margin: 0 auto; padding: 0 16px 40px;
+  }
+
+  .day-section { margin-bottom: 28px; }
+
+  .day-header {
+    display: flex; align-items: center;
+    gap: 10px; margin-bottom: 12px;
+  }
+  .day-badge {
+    background: linear-gradient(135deg, var(--sky), var(--ocean));
+    color: white; font-family: 'Nunito', sans-serif;
+    font-weight: 800; font-size: 15px;
+    padding: 5px 16px; border-radius: 20px;
+    box-shadow: 0 3px 10px rgba(2,119,189,0.3); white-space: nowrap;
+  }
+  .day-line {
+    flex: 1; height: 2px;
+    background: linear-gradient(to right, #b3e5fc, transparent);
+    border-radius: 2px;
+  }
+
+  /* Card */
+  .place-card {
+    background: var(--card-bg); border-radius: 16px;
+    padding: 16px 18px; box-shadow: var(--shadow);
+    cursor: pointer; text-decoration: none; color: inherit;
+    display: flex; align-items: center; gap: 14px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: 2px solid transparent;
+    margin-bottom: 10px;
+    animation: slideUp 0.4s ease both;
+  }
+  .place-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(2,119,189,0.2);
+    border-color: var(--sky);
+  }
+  .place-card:active { transform: scale(0.98); }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .card-icon {
+    width: 46px; height: 46px; border-radius: 12px;
+    background: linear-gradient(135deg, #e0f7fa, #b3e5fc);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(2,119,189,0.12);
+  }
+  .card-body { flex: 1; min-width: 0; }
+  .card-place {
+    font-size: 15px; font-weight: 700; color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .card-note {
+    font-size: 12px; color: var(--text-light); margin-top: 3px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .card-parking {
+    font-size: 11px; color: #90caf9; margin-top: 2px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .card-parking::before { content: '🅿️ '; }
+  .card-arrow { font-size: 22px; color: var(--sky); flex-shrink: 0; }
+
+  .tip {
+    position: relative; z-index: 1;
+    max-width: 600px; margin: 0 auto 8px; padding: 0 16px;
+    font-size: 12px; color: var(--text-light); text-align: center;
+  }
+  .tip span { background: #fff9c4; border-radius: 6px; padding: 2px 8px; }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="header-icon">🚗</span>
+  <h1>旅遊行程導航</h1>
+  <p>點擊地點即可開啟 Google Maps 汽車導航</p>
+</header>
+
+<div class="config-bar">
+  <div class="config-card">
+    <div class="config-group" style="flex:2; min-width:180px;">
+      <label>試算表 ID</label>
+      <input type="text" id="sheetId" value="1Ui5PbkexOcy7Y6p-X-XX3aAQCmuh16W9aiWWm5HqQJA" placeholder="貼上 Google 試算表 ID">
+    </div>
+    <button class="load-btn" onclick="loadSheet()">📍 載入行程</button>
+  </div>
+</div>
+
+<div class="status" id="status"></div>
+
+<div class="tip" id="tip" style="display:none">
+  <span>💡 點擊任一地點卡片，即可在 Google Maps 開始汽車導航</span>
+</div>
+
+<div class="days-wrapper" id="daysWrapper"></div>
+
+<script>
+const ICONS = ['🏯','🌸','⛩️','🗻','🌊','🍜','🎑','🌺','🗺️','🏖️','🌿','🎋','🦋','🌅','🏔️','🎠','🎪','🌾','🦅','🐚'];
+
+// 欄位組定義：每天 4 欄（景點, 導航, 品項, 花費）
+// A=0, B=1, C=2, D=3 → 第一天
+// E=4, F=5, G=6, H=7 → 第二天
+// I=8, J=9, K=10      → 第三天
+const DAY_COLS = [
+  { place: 0, nav: 1, note: 2 },
+  { place: 4, nav: 5, note: 6 },
+  { place: 8, nav: 9, note: 10 },
+];
+
+function buildMapsUrl(dest) {
+  return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(dest.trim())}&travelmode=driving`;
+}
+
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function getIcon(i) { return ICONS[i % ICONS.length]; }
+
+async function loadSheet() {
+  const sheetId = document.getElementById('sheetId').value.trim();
+  const status  = document.getElementById('status');
+  const wrapper = document.getElementById('daysWrapper');
+  const tip     = document.getElementById('tip');
+
+  if (!sheetId) {
+    status.textContent = '請輸入試算表 ID';
+    status.className = 'status error';
+    return;
+  }
+
+  status.innerHTML = '<span class="spinner"></span>讀取行程資料中...';
+  status.className = 'status loading';
+  wrapper.innerHTML = '';
+  tip.style.display = 'none';
+
+  const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
+
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('無法讀取試算表，請確認已設為公開');
+    const text = await res.text();
+    const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
+    const rows = json.table.rows;
+
+    if (!rows || rows.length < 2) {
+      status.textContent = '試算表內沒有資料';
+      status.className = 'status error';
+      return;
+    }
+
+    const headerRow = rows[0];  // 第一列：日期
+    const dataRows  = rows.slice(1);  // 其餘列：地點
+
+    let totalCount = 0;
+    let iconIdx = 0;
+
+    DAY_COLS.forEach((cols, dayIdx) => {
+      // 日期從第一列取
+      const dateCell = headerRow.c[cols.place];
+      const dateVal  = dateCell && dateCell.v ? String(dateCell.v).trim() : '';
+      if (!dateVal) return; // 該天沒有日期，跳過
+
+      // 收集地點
+      const places = [];
+      dataRows.forEach(row => {
+        const pc = row.c && row.c[cols.place] ? row.c[cols.place] : null;
+        const nc = row.c && row.c[cols.nav]   ? row.c[cols.nav]   : null;
+        const tc = row.c && row.c[cols.note]  ? row.c[cols.note]  : null;
+
+        const place = pc && pc.v ? String(pc.v).trim() : '';
+        const nav   = nc && nc.v ? String(nc.v).trim() : '';
+        const note  = tc && tc.v ? String(tc.v).trim() : '';
+
+        if (place || nav) places.push({ place, nav, note });
+      });
+
+      if (places.length === 0) return;
+      totalCount += places.length;
+
+      // 建立 section
+      const section = document.createElement('div');
+      section.className = 'day-section';
+      section.innerHTML = `
+        <div class="day-header">
+          <div class="day-badge">📅 ${escHtml(dateVal)}</div>
+          <div class="day-line"></div>
+        </div>
+      `;
+
+      places.forEach((item) => {
+        const dest        = item.nav || item.place;
+        const displayName = item.place || item.nav;
+
+        const card = document.createElement('a');
+        card.className = 'place-card';
+        card.href      = buildMapsUrl(dest);
+        card.target    = '_blank';
+        card.rel       = 'noopener';
+        card.style.animationDelay = `${iconIdx * 0.04}s`;
+
+        card.innerHTML = `
+          <div class="card-icon">${getIcon(iconIdx)}</div>
+          <div class="card-body">
+            <div class="card-place">${escHtml(displayName)}</div>
+            ${item.note ? `<div class="card-note">📝 ${escHtml(item.note)}</div>` : ''}
+            ${item.nav && item.nav !== item.place ? `<div class="card-parking">${escHtml(item.nav)}</div>` : ''}
+          </div>
+          <div class="card-arrow">›</div>
+        `;
+
+        section.appendChild(card);
+        iconIdx++;
+      });
+
+      wrapper.appendChild(section);
+    });
+
+    if (totalCount === 0) {
+      status.textContent = '找不到任何地點資料';
+      status.className = 'status error';
+      return;
+    }
+
+    status.textContent = `✅ 已載入 ${totalCount} 個地點`;
+    status.className = 'status';
+    tip.style.display = 'block';
+
+  } catch(e) {
+    status.textContent = `❌ ${e.message || '讀取失敗'}`;
+    status.className = 'status error';
+  }
+}
+
+window.addEventListener('DOMContentLoaded', loadSheet);
+</script>
+</body>
+</html>
