@@ -336,10 +336,13 @@ let activeDay = 0;
 // ── 當日自動對應 ──
 // 把日期字串正規化成 M/D，方便比對裝置日期
 function normDate(str) {
-  // 支援 2025/4/19(日)、2025-04-19、4/19 等格式
-  const m = str.match(/(\d{1,2})[\/\-](\d{1,2})/);
-  if (!m) return str;
-  return `${parseInt(m[1])}/${parseInt(m[2])}`;
+  // 優先匹配 年/月/日 或 年-月-日，只取月/日
+  const full = str.match(/\d{4}[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+  if (full) return `${parseInt(full[1])}/${parseInt(full[2])}`;
+  // 退而求其次：直接是 月/日
+  const md = str.match(/^(\d{1,2})[\/\-](\d{1,2})/);
+  if (md) return `${parseInt(md[1])}/${parseInt(md[2])}`;
+  return str;
 }
 
 function todayKey() {
