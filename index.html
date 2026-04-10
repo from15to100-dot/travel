@@ -555,11 +555,12 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Enter') confirmExpense();
   if (e.key === 'Escape') closeModal();
 });
-document.getElementById('expenseModal').addEventListener('click', function(e) {
-  if (e.target === this) closeModal();
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('expenseModal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+  loadSheet();
 });
-
-// ── 總計 badge ──
 function updateTotalBadge() {
   const expenses = getExpenses();
   const total = Object.values(expenses).reduce((s, v) => s + (v || 0), 0);
@@ -796,7 +797,7 @@ async function loadSheet() {
   }
 }
 
-window.addEventListener('DOMContentLoaded', loadSheet);
+
 </script>
 </body>
 </html>
