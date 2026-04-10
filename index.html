@@ -222,7 +222,105 @@
     to { transform: scale(4); opacity: 0; }
   }
 
-  /* ── Visited card ── */
+  /* ── Expense badge ── */
+  .card-expense {
+    font-size: 12px; color: #2e7d32; font-weight: 700; margin-top: 3px;
+  }
+  .card-expense::before { content: '💰 $'; }
+
+  /* ── Expense modal ── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 100;
+    background: rgba(0,0,0,0.45);
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal-box {
+    background: white; border-radius: 20px;
+    padding: 24px 22px; width: 88%; max-width: 360px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+    animation: popIn 0.2s ease;
+  }
+  @keyframes popIn {
+    from { transform: scale(0.88); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+  }
+  .modal-title { font-size: 15px; font-weight: 700; color: var(--ocean); margin-bottom: 4px; }
+  .modal-place { font-size: 13px; color: var(--text-light); margin-bottom: 16px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .modal-input-wrap {
+    display: flex; align-items: center;
+    border: 2px solid #b3e5fc; border-radius: 12px;
+    overflow: hidden; margin-bottom: 16px;
+  }
+  .modal-input-wrap span {
+    padding: 10px 12px; background: #f0faff;
+    font-size: 16px; font-weight: 700; color: var(--ocean);
+    border-right: 2px solid #b3e5fc; user-select: none;
+  }
+  .modal-input-wrap input {
+    flex: 1; border: none; outline: none;
+    padding: 10px 12px; font-size: 20px; font-weight: 700;
+    font-family: 'Nunito', sans-serif; color: var(--text);
+  }
+  .modal-btns { display: flex; gap: 8px; }
+  .modal-btn {
+    flex: 1; padding: 10px; border: none; border-radius: 12px;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    font-family: 'Noto Sans TC', sans-serif; transition: transform 0.12s;
+  }
+  .modal-btn:active { transform: scale(0.96); }
+  .modal-btn.cancel { background: #f0f4f8; color: var(--text-light); }
+  .modal-btn.confirm {
+    background: linear-gradient(135deg, var(--sky), var(--ocean));
+    color: white; box-shadow: 0 3px 10px rgba(2,119,189,0.3);
+  }
+  .modal-btn.clear { background: #fff0ee; color: var(--coral); flex: 0 0 auto; padding: 10px 16px; }
+
+  /* ── Summary panel ── */
+  .summary-bar {
+    position: relative; z-index: 1;
+    max-width: 600px; margin: 0 auto; padding: 0 16px 12px;
+  }
+  .summary-toggle {
+    width: 100%; padding: 10px 16px;
+    background: var(--card-bg); border: 2px solid #b3e5fc;
+    border-radius: 12px; font-size: 14px; font-weight: 700;
+    color: var(--ocean); cursor: pointer; box-shadow: var(--shadow);
+    font-family: 'Noto Sans TC', sans-serif; transition: background 0.15s;
+    text-align: left;
+  }
+  .summary-toggle:hover { background: #e8f7ff; }
+  .summary-panel {
+    display: none; margin-top: 10px;
+    background: var(--card-bg); border-radius: 14px;
+    box-shadow: var(--shadow); overflow: hidden;
+  }
+  .summary-panel.open { display: block; }
+  .summary-panel table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .summary-panel th {
+    background: linear-gradient(135deg, var(--sky), var(--ocean));
+    color: white; padding: 9px 12px; text-align: left; font-weight: 700;
+  }
+  .summary-panel td { padding: 9px 12px; border-bottom: 1px solid #e8f4fb; }
+  .summary-panel tr:last-child td { border-bottom: none; }
+  .summary-panel tr:hover td { background: #f0faff; }
+  .summary-day-row td { background: #e0f7fa; font-weight: 700; color: var(--ocean); font-size: 12px; }
+  .summary-total td { background: #e8f5e9; font-weight: 800; color: #2e7d32; font-size: 14px; }
+  .expense-val { color: #2e7d32; font-weight: 700; }
+  .no-expense { color: #ccc; }
+  .summary-actions { display: flex; gap: 8px; padding: 12px; border-top: 1px solid #e8f4fb; }
+  .summary-act-btn {
+    flex: 1; padding: 9px; border: none; border-radius: 10px;
+    font-size: 13px; font-weight: 700; cursor: pointer;
+    font-family: 'Noto Sans TC', sans-serif; transition: transform 0.12s;
+  }
+  .summary-act-btn:active { transform: scale(0.96); }
+  .btn-copy {
+    background: linear-gradient(135deg, var(--sky), var(--ocean));
+    color: white; box-shadow: 0 2px 8px rgba(2,119,189,0.25);
+  }
+  .btn-clear-all { background: #fff0ee; color: var(--coral); }
   .place-card { position: relative; }
   .place-card.visited {
     opacity: 0.42;
@@ -256,6 +354,29 @@
 <div class="status" id="status"></div>
 
 <div class="content" id="content"></div>
+
+<!-- Expense modal -->
+<div class="modal-overlay" id="expenseModal">
+  <div class="modal-box">
+    <div class="modal-title">💰 輸入花費</div>
+    <div class="modal-place" id="modalPlaceName"></div>
+    <div class="modal-input-wrap">
+      <span>$</span>
+      <input type="number" id="expenseInput" placeholder="0" min="0" inputmode="numeric">
+    </div>
+    <div class="modal-btns">
+      <button class="modal-btn clear" onclick="clearExpense()">清除</button>
+      <button class="modal-btn cancel" onclick="closeModal()">取消</button>
+      <button class="modal-btn confirm" onclick="confirmExpense()">確認</button>
+    </div>
+  </div>
+</div>
+
+<!-- Expense summary -->
+<div class="summary-bar">
+  <button class="summary-toggle" id="summaryToggle" onclick="toggleSummary()">📊 花費總覽　<span id="summaryTotalBadge" style="float:right;color:#2e7d32"></span></button>
+  <div class="summary-panel" id="summaryPanel"></div>
+</div>
 
 <!-- Sheet ID at bottom -->
 <div class="bottom-bar">
@@ -382,7 +503,127 @@ function makeCardId(dayIdx, placeName) {
   return `d${dayIdx}_${placeName}`;
 }
 
-function buildMapsUrl(dest) {
+// ── 花費記錄（永久保存，不自動清除）──
+function getExpenses() {
+  try { return JSON.parse(localStorage.getItem('expenses_trip') || '{}'); } catch { return {}; }
+}
+function saveExpense(cardId, amount) {
+  const data = getExpenses();
+  if (amount === null) { delete data[cardId]; } else { data[cardId] = amount; }
+  localStorage.setItem('expenses_trip', JSON.stringify(data));
+}
+function getExpense(cardId) {
+  const data = getExpenses();
+  return data[cardId] !== undefined ? data[cardId] : null;
+}
+
+// ── Modal ──
+let _modalCardId = null;
+
+function openExpenseModal(cardId, placeName) {
+  _modalCardId = cardId;
+  document.getElementById('modalPlaceName').textContent = placeName;
+  const cur = getExpense(cardId);
+  document.getElementById('expenseInput').value = cur !== null ? cur : '';
+  document.getElementById('expenseModal').classList.add('show');
+  setTimeout(() => document.getElementById('expenseInput').focus(), 150);
+}
+function closeModal() {
+  document.getElementById('expenseModal').classList.remove('show');
+  _modalCardId = null;
+}
+function confirmExpense() {
+  if (!_modalCardId) return;
+  const val = document.getElementById('expenseInput').value.trim();
+  const amount = val === '' ? null : parseInt(val);
+  saveExpense(_modalCardId, amount);
+  closeModal();
+  renderCards();
+  updateTotalBadge();
+  if (document.getElementById('summaryPanel').classList.contains('open')) renderSummary();
+}
+function clearExpense() {
+  if (!_modalCardId) return;
+  saveExpense(_modalCardId, null);
+  closeModal();
+  renderCards();
+  updateTotalBadge();
+  if (document.getElementById('summaryPanel').classList.contains('open')) renderSummary();
+}
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('expenseModal').classList.contains('show')) return;
+  if (e.key === 'Enter') confirmExpense();
+  if (e.key === 'Escape') closeModal();
+});
+document.getElementById('expenseModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// ── 總計 badge ──
+function updateTotalBadge() {
+  const expenses = getExpenses();
+  const total = Object.values(expenses).reduce((s, v) => s + (v || 0), 0);
+  const badge = document.getElementById('summaryTotalBadge');
+  if (badge) badge.textContent = total > 0 ? `共 $${total.toLocaleString()}` : '';
+}
+
+// ── 花費總覽 ──
+function toggleSummary() {
+  const panel = document.getElementById('summaryPanel');
+  const isOpen = panel.classList.toggle('open');
+  if (isOpen) renderSummary();
+}
+function renderSummary() {
+  const panel = document.getElementById('summaryPanel');
+  const expenses = getExpenses();
+  let grandTotal = 0;
+  let copyText = '日期\t景點\t品項\t花費\n';
+
+  let html = '<table><thead><tr><th>景點</th><th>品項</th><th>花費</th></tr></thead><tbody>';
+
+  allDays.forEach((day, di) => {
+    let dayTotal = 0;
+    html += `<tr class="summary-day-row"><td colspan="3">📅 ${esc(day.date)}</td></tr>`;
+
+    day.places.forEach(item => {
+      const name = item.place || item.nav;
+      const cardId = makeCardId(di, name);
+      const exp = getExpense(cardId);
+      if (exp !== null) { grandTotal += exp; dayTotal += exp; }
+      const expStr = exp !== null ? `$${exp.toLocaleString()}` : '－';
+      html += `<tr>
+        <td>${esc(name)}</td>
+        <td style="color:var(--text-light);font-size:12px">${esc(item.note || '')}</td>
+        <td class="${exp !== null ? 'expense-val' : 'no-expense'}">${expStr}</td>
+      </tr>`;
+      copyText += `${day.date}\t${name}\t${item.note || ''}\t${exp !== null ? exp : ''}\n`;
+    });
+  });
+
+  html += `<tr class="summary-total"><td colspan="2">🧾 總計</td><td>$${grandTotal.toLocaleString()}</td></tr>`;
+  html += `</tbody></table>`;
+  html += `<div class="summary-actions">
+    <button class="summary-act-btn btn-copy" id="copyBtn" onclick="copySummary()">📋 複製表格</button>
+    <button class="summary-act-btn btn-clear-all" onclick="clearAllExpenses()">🗑️ 清除全部</button>
+  </div>`;
+
+  panel.innerHTML = html;
+  panel._copyText = copyText;
+}
+function copySummary() {
+  const panel = document.getElementById('summaryPanel');
+  navigator.clipboard.writeText(panel._copyText || '').then(() => {
+    const btn = document.getElementById('copyBtn');
+    if (btn) { btn.textContent = '✅ 已複製！'; setTimeout(() => btn.textContent = '📋 複製表格', 2000); }
+  }).catch(() => alert('複製失敗，請手動選取內容'));
+}
+function clearAllExpenses() {
+  if (!confirm('確定清除所有花費記錄？')) return;
+  localStorage.removeItem('expenses_trip');
+  renderCards();
+  updateTotalBadge();
+  renderSummary();
+}
   return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(dest.trim())}&travelmode=driving`;
 }
 function esc(str) {
@@ -421,6 +662,7 @@ function renderCards() {
     const displayName = item.place || item.nav;
     const cardId      = makeCardId(activeDay, displayName);
     const isVisited   = visited.includes(cardId);
+    const expense     = getExpense(cardId);
 
     const card = document.createElement('a');
     card.className = 'place-card' + (isVisited ? ' visited' : '');
@@ -434,42 +676,55 @@ function renderCards() {
       <div class="card-body">
         <div class="card-place">${esc(displayName)}</div>
         ${item.note ? `<div class="card-note">📝 ${esc(item.note)}</div>` : ''}
+        ${expense !== null ? `<div class="card-expense">${expense.toLocaleString()}</div>` : ''}
       </div>
       ${isVisited ? '<span class="visited-check">✓</span>' : ''}
       <div class="card-arrow">›</div>
     `;
 
-    // 波紋效果
+    // 波紋
     card.addEventListener('click', (e) => {
       const rect = card.getBoundingClientRect();
       const size = Math.max(rect.width, rect.height);
-      const x = e.clientX - rect.left - size / 2;
-      const y = e.clientY - rect.top - size / 2;
       const ripple = document.createElement('span');
       ripple.className = 'ripple';
-      ripple.style.cssText = `width:${size}px;height:${size}px;left:${x}px;top:${y}px`;
+      ripple.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX-rect.left-size/2}px;top:${e.clientY-rect.top-size/2}px`;
       card.appendChild(ripple);
       setTimeout(() => ripple.remove(), 620);
     });
 
-    // 點擊時記錄已拜訪，短暫延遲讓 Maps 先開啟再更新 UI
+    // 短按：導航 + 標記已拜訪
     card.addEventListener('click', () => {
       markVisited(cardId);
       setTimeout(() => {
         card.classList.add('visited');
-        const check = card.querySelector('.visited-check');
-        if (!check) {
+        if (!card.querySelector('.visited-check')) {
           const s = document.createElement('span');
-          s.className = 'visited-check';
-          s.textContent = '✓';
+          s.className = 'visited-check'; s.textContent = '✓';
           card.insertBefore(s, card.querySelector('.card-arrow'));
         }
         card.querySelector('.card-place').style.textDecoration = 'line-through';
       }, 300);
     });
 
+    // 長按：輸入花費（不觸發導航）
+    let pressTimer = null;
+    let didLongPress = false;
+    card.addEventListener('pointerdown', () => {
+      didLongPress = false;
+      pressTimer = setTimeout(() => {
+        didLongPress = true;
+        openExpenseModal(cardId, displayName);
+      }, 500);
+    });
+    card.addEventListener('pointerup',    () => clearTimeout(pressTimer));
+    card.addEventListener('pointerleave', () => clearTimeout(pressTimer));
+    card.addEventListener('click', (e) => { if (didLongPress) e.preventDefault(); });
+    card.addEventListener('contextmenu',  (e) => e.preventDefault());
+
     content.appendChild(card);
   });
+  updateTotalBadge();
 }
 
 async function loadSheet() {
