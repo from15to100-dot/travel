@@ -208,6 +208,23 @@
     color: var(--text-light); font-size: 14px;
   }
   .empty-msg .e { font-size: 40px; display: block; margin-bottom: 10px; }
+
+  /* ── Visited card ── */
+  .place-card { position: relative; }
+  .place-card.visited {
+    opacity: 0.42;
+    filter: grayscale(55%);
+    background: #dce8f0ee;
+  }
+  .place-card.visited .card-place {
+    text-decoration: line-through;
+    color: var(--text-light);
+  }
+  .visited-check {
+    position: absolute; right: 44px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 15px; color: #66bb6a; font-weight: 900;
+  }
 </style>
 </head>
 <body>
@@ -300,8 +317,52 @@ const DAY_COLS = [
   { place: 8, nav: 9, note: 10 }, // I, J, K
 ];
 
-let allDays = []; // [{ date, places:[{place,nav,note}] }]
+let allDays = [];
 let activeDay = 0;
+
+// ── 當日自動對應 ──
+// 把日期字串正規化成 M/D，方便比對裝置日期
+function normDate(str) {
+  // 支援 2025/4/19(日)、2025-04-19、4/19 等格式
+  const m = str.match(/(\d{1,2})[\/\-](\d{1,2})/);
+  if (!m) return str;
+  return `${parseInt(m[1])}/${parseInt(m[2])}`;
+}
+
+function todayKey() {
+  const d = new Date();
+  return `${d.getMonth()+1}/${d.getDate()}`;
+}
+
+function findTodayIndex() {
+  const today = todayKey();
+  const idx = allDays.findIndex(d => normDate(d.date) === today);
+  return idx >= 0 ? idx : 0;
+}
+
+// ── localStorage 已拜訪記錄 ──
+// key 格式：visited_YYYY-MM-DD，每天自動區隔
+function storageKey() {
+  const d = new Date();
+  return `visited_${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function getVisited() {
+  try {
+    return JSON.parse(localStorage.getItem(storageKey()) || '[]');
+  } catch { return []; }
+}
+
+function markVisited(id) {
+  try {
+    const v = getVisited();
+    if (!v.includes(id)) { v.push(id); localStorage.setItem(storageKey(), JSON.stringify(v)); }
+  } catch {}
+}
+
+function makeCardId(dayIdx, placeName) {
+  return `d${dayIdx}_${placeName}`;
+}
 
 function buildMapsUrl(dest) {
   return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(dest.trim())}&travelmode=driving`;
@@ -335,12 +396,16 @@ function renderCards() {
     return;
   }
   content.innerHTML = '';
+  const visited = getVisited();
+
   day.places.forEach((item, i) => {
-    const dest = item.nav || item.place;
+    const dest        = item.nav || item.place;
     const displayName = item.place || item.nav;
+    const cardId      = makeCardId(activeDay, displayName);
+    const isVisited   = visited.includes(cardId);
 
     const card = document.createElement('a');
-    card.className = 'place-card';
+    card.className = 'place-card' + (isVisited ? ' visited' : '');
     card.href = buildMapsUrl(dest);
     card.target = '_blank';
     card.rel = 'noopener';
@@ -352,8 +417,26 @@ function renderCards() {
         <div class="card-place">${esc(displayName)}</div>
         ${item.note ? `<div class="card-note">📝 ${esc(item.note)}</div>` : ''}
       </div>
+      ${isVisited ? '<span class="visited-check">✓</span>' : ''}
       <div class="card-arrow">›</div>
     `;
+
+    // 點擊時記錄已拜訪，短暫延遲讓 Maps 先開啟再更新 UI
+    card.addEventListener('click', () => {
+      markVisited(cardId);
+      setTimeout(() => {
+        card.classList.add('visited');
+        const check = card.querySelector('.visited-check');
+        if (!check) {
+          const s = document.createElement('span');
+          s.className = 'visited-check';
+          s.textContent = '✓';
+          card.insertBefore(s, card.querySelector('.card-arrow'));
+        }
+        card.querySelector('.card-place').style.textDecoration = 'line-through';
+      }, 300);
+    });
+
     content.appendChild(card);
   });
 }
@@ -412,7 +495,7 @@ async function loadSheet() {
 
     if (allDays.length === 0) throw new Error('找不到任何行程資料');
 
-    activeDay = 0;
+    activeDay = findTodayIndex(); // 自動對應當日，找不到則預設第一天
     let total = allDays.reduce((s, d) => s + d.places.length, 0);
     status.textContent = `✅ 已載入 ${allDays.length} 天、${total} 個地點`;
     status.className = 'status';
