@@ -133,7 +133,7 @@
   .place-card {
     background: var(--card-bg); border-radius: 16px;
     padding: 15px 18px; box-shadow: var(--shadow);
-    cursor: pointer; text-decoration: none; color: inherit;
+    color: inherit;
     display: flex; align-items: center; gap: 14px;
     transition: transform 0.18s, box-shadow 0.18s;
     border: 2px solid transparent;
@@ -168,7 +168,30 @@
     font-size: 12px; color: var(--text-light); margin-top: 3px;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  .card-arrow { font-size: 22px; color: var(--sky); flex-shrink: 0; }
+  .card-actions {
+    display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+  }
+  .card-action {
+    width: 40px; height: 40px;
+    border: none; border-radius: 12px;
+    display: inline-flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 18px;
+    box-shadow: 0 2px 8px rgba(2,119,189,0.14);
+    transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+  }
+  .card-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(2,119,189,0.18);
+  }
+  .card-action:active { transform: scale(0.96); }
+  .card-action.nav {
+    background: linear-gradient(135deg, var(--sky), var(--ocean));
+    color: white;
+  }
+  .card-action.expense {
+    background: #e8f5e9;
+    color: #2e7d32;
+  }
 
   /* ── Bottom config ── */
   .bottom-bar {
@@ -254,9 +277,11 @@
     overflow: hidden; margin-bottom: 16px;
   }
   .modal-input-wrap span {
-    padding: 10px 12px; background: #f0faff;
-    font-size: 16px; font-weight: 700; color: var(--ocean);
+    min-width: 48px;
+    padding: 10px 14px; background: #f0faff;
+    font-size: 22px; line-height: 1; font-weight: 800; color: var(--ocean);
     border-right: 2px solid #b3e5fc; user-select: none;
+    display: flex; align-items: center; justify-content: center;
   }
   .modal-input-wrap input {
     flex: 1; border: none; outline: none;
@@ -332,7 +357,7 @@
     color: var(--text-light);
   }
   .visited-check {
-    position: absolute; right: 44px; top: 50%;
+    position: absolute; right: 108px; top: 50%;
     transform: translateY(-50%);
     font-size: 15px; color: #66bb6a; font-weight: 900;
   }
@@ -343,7 +368,7 @@
 <header>
   <span class="header-icon">🚗</span>
   <h1>旅遊行程導航</h1>
-  <p>點擊地點即可開啟 Google Maps 汽車導航</p>
+  <p>使用卡片右側按鈕進行導航或記帳</p>
 </header>
 
 <!-- Day Tabs (populated after load) -->
@@ -650,6 +675,24 @@ function switchDay(idx) {
   renderCards();
 }
 
+function markCardVisitedUI(card) {
+  card.classList.add('visited');
+  if (!card.querySelector('.visited-check')) {
+    const s = document.createElement('span');
+    s.className = 'visited-check';
+    s.textContent = '✓';
+    card.appendChild(s);
+  }
+  const title = card.querySelector('.card-place');
+  if (title) title.style.textDecoration = 'line-through';
+}
+
+function navigateToPlace(dest, cardId, card) {
+  markVisited(cardId);
+  if (card) markCardVisitedUI(card);
+  window.open(buildMapsUrl(dest), '_blank', 'noopener');
+}
+
 function renderCards() {
   const content = document.getElementById('content');
   const day = allDays[activeDay];
@@ -667,11 +710,8 @@ function renderCards() {
     const isVisited   = visited.includes(cardId);
     const expense     = getExpense(cardId);
 
-    const card = document.createElement('a');
+    const card = document.createElement('div');
     card.className = 'place-card' + (isVisited ? ' visited' : '');
-    card.href = buildMapsUrl(dest);
-    card.target = '_blank';
-    card.rel = 'noopener';
     card.style.animationDelay = `${i * 0.05}s`;
 
     card.innerHTML = `
@@ -682,48 +722,18 @@ function renderCards() {
         ${expense !== null ? `<div class="card-expense">${expense.toLocaleString()}</div>` : ''}
       </div>
       ${isVisited ? '<span class="visited-check">✓</span>' : ''}
-      <div class="card-arrow">›</div>
+      <div class="card-actions">
+        <button class="card-action nav" type="button" title="導航">🧭</button>
+        <button class="card-action expense" type="button" title="記帳">💰</button>
+      </div>
     `;
 
-    // 波紋
-    card.addEventListener('click', (e) => {
-      const rect = card.getBoundingClientRect();
-      const size = Math.max(rect.width, rect.height);
-      const ripple = document.createElement('span');
-      ripple.className = 'ripple';
-      ripple.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX-rect.left-size/2}px;top:${e.clientY-rect.top-size/2}px`;
-      card.appendChild(ripple);
-      setTimeout(() => ripple.remove(), 620);
+    card.querySelector('.card-action.nav').addEventListener('click', () => {
+      navigateToPlace(dest, cardId, card);
     });
-
-    // 短按：導航 + 標記已拜訪
-    card.addEventListener('click', () => {
-      markVisited(cardId);
-      setTimeout(() => {
-        card.classList.add('visited');
-        if (!card.querySelector('.visited-check')) {
-          const s = document.createElement('span');
-          s.className = 'visited-check'; s.textContent = '✓';
-          card.insertBefore(s, card.querySelector('.card-arrow'));
-        }
-        card.querySelector('.card-place').style.textDecoration = 'line-through';
-      }, 300);
+    card.querySelector('.card-action.expense').addEventListener('click', () => {
+      openExpenseModal(cardId, displayName);
     });
-
-    // 長按：輸入花費（不觸發導航）
-    let pressTimer = null;
-    let didLongPress = false;
-    card.addEventListener('pointerdown', () => {
-      didLongPress = false;
-      pressTimer = setTimeout(() => {
-        didLongPress = true;
-        openExpenseModal(cardId, displayName);
-      }, 500);
-    });
-    card.addEventListener('pointerup',    () => clearTimeout(pressTimer));
-    card.addEventListener('pointerleave', () => clearTimeout(pressTimer));
-    card.addEventListener('click', (e) => { if (didLongPress) e.preventDefault(); });
-    card.addEventListener('contextmenu',  (e) => e.preventDefault());
 
     content.appendChild(card);
   });
