@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>旅遊行程導航</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sky: #4fc3f7;
+    --ocean: #0277bd;
+    --coral: #ff7043;
+    --text: #2c3e50;
+    --text-light: #7f8c8d;
+    --card-bg: #ffffffee;
+    --shadow: 0 4px 20px rgba(2,119,189,0.13);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans TC', sans-serif;
+    background: linear-gradient(160deg, #e0f7fa 0%, #b3e5fc 40%, #e8f5e9 100%);
+    min-height: 100vh;
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; top: -80px; right: -80px;
+    width: 320px; height: 320px;
+    background: radial-gradient(circle, #fff9c4aa 0%, transparent 70%);
+    border-radius: 50%; pointer-events: none; z-index: 0;
+  }
+  body::after {
+    content: '';
+    position: fixed; bottom: -60px; left: -60px;
+    width: 260px; height: 260px;
+    background: radial-gradient(circle, #b2dfdbaa 0%, transparent 70%);
+    border-radius: 50%; pointer-events: none; z-index: 0;
+  }
+
+  /* ── Header ── */
+  header {
+    position: relative; z-index: 1;
+    text-align: center;
+    padding: 32px 20px 16px;
+  }
+  .header-icon {
+    font-size: 44px; display: block;
+    animation: float 3s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%,100% { transform: translateY(0); }
+    50%      { transform: translateY(-8px); }
+  }
+  header h1 {
+    font-family: 'Nunito', sans-serif;
+    font-size: clamp(20px, 5vw, 30px);
+    font-weight: 800; color: var(--ocean);
+    letter-spacing: 1px; margin-top: 4px;
+  }
+  header p { color: var(--text-light); font-size: 12px; margin-top: 4px; }
+
+  /* ── Day Tabs ── */
+  .day-tabs {
+    position: relative; z-index: 1;
+    max-width: 600px; margin: 0 auto 4px;
+    padding: 0 16px;
+    display: flex; gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .day-tab {
+    flex: 1; min-width: 100px; max-width: 180px;
+    padding: 10px 14px;
+    border: 2px solid #b3e5fc;
+    border-radius: 14px;
+    background: var(--card-bg);
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px; font-weight: 700;
+    color: var(--ocean);
+    cursor: pointer;
+    text-align: center;
+    box-shadow: var(--shadow);
+    transition: all 0.18s;
+    line-height: 1.3;
+  }
+  .day-tab:hover { background: #e0f7fa; border-color: var(--sky); transform: translateY(-2px); }
+  .day-tab.active {
+    background: linear-gradient(135deg, var(--sky), var(--ocean));
+    border-color: transparent; color: white;
+    box-shadow: 0 4px 14px rgba(2,119,189,0.35); transform: translateY(-2px);
+  }
+  .day-tab .tab-date { font-size: 13px; opacity: 0.85; }
+  .day-tab.skeleton { background: #e0f0fa; border-color: #cce; color: #aac; cursor: default; }
+
+  /* ── Status ── */
+  .status {
+    position: relative; z-index: 1;
+    text-align: center; padding: 8px 16px;
+    font-size: 13px; color: var(--text-light); min-height: 32px;
+  }
+  .status.error { color: var(--coral); font-weight: 600; }
+  .status.loading { color: var(--ocean); }
+  .spinner {
+    display: inline-block; width: 15px; height: 15px;
+    border: 3px solid #b3e5fc; border-top-color: var(--ocean);
+    border-radius: 50%; animation: spin 0.8s linear infinite;
+    vertical-align: middle; margin-right: 6px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Content ── */
+  .content {
+    position: relative; z-index: 1;
+    flex: 1;
+    max-width: 600px; width: 100%;
+    margin: 0 auto; padding: 8px 16px 16px;
+  }
+
+  /* ── Cards ── */
+  .place-card {
+    background: var(--card-bg); border-radius: 16px;
+    padding: 15px 18px; box-shadow: var(--shadow);
+    color: inherit;
+    display: flex; align-items: center; gap: 14px;
+    transition: transform 0.18s, box-shadow 0.18s;
+    border: 2px solid transparent;
+    margin-bottom: 10px;
+    animation: slideUp 0.35s ease both;
+    position: relative; cursor: pointer;
+  }
+  .place-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(2,119,189,0.2);
+    border-color: var(--sky);
+  }
+  .place-card:active { transform: scale(0.98); }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .card-icon {
+    width: 46px; height: 46px; border-radius: 12px;
+    background: linear-gradient(135deg, #e0f7fa, #b3e5fc);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(2,119,189,0.12);
+  }
+  .card-body { flex: 1; min-width: 0; }
+  .card-place {
+    font-size: 15px; font-weight: 700; color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .card-note {
+    font-size: 12px; color: var(--text-light); margin-top: 3px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .card-arrow { font-size: 22px; color: var(--sky); flex-shrink: 0; }
+
+  /* ── Visited ── */
+  .place-card.visited {
+    opacity: 0.42; filter: grayscale(55%); background: #dce8f0ee;
+  }
+  .place-card.visited .card-place {
+    text-decoration: line-through; color: var(--text-light);
+  }
+  .visited-check {
+    position: absolute; right: 44px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 15px; color: #66bb6a; font-weight: 900;
+  }
+
+  /* ── Bottom config ── */
+  .bottom-bar {
+    position: relative; z-index: 1;
+    max-width: 600px; margin: 0 auto; padding: 0 16px 28px;
+  }
+  .bottom-card {
+    background: #ffffffcc; border-radius: 14px;
+    padding: 12px 16px; box-shadow: var(--shadow);
+    display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;
+  }
+  .bottom-card label {
+    display: block; font-size: 11px; font-weight: 700;
+    color: var(--ocean); text-transform: uppercase;
+    letter-spacing: 0.5px; margin-bottom: 4px;
+  }
+  .bottom-card input {
+    flex: 1; min-width: 160px;
+    padding: 7px 11px; border: 2px solid #b3e5fc; border-radius: 10px;
+    font-size: 12px; font-family: 'Noto Sans TC', sans-serif;
+    color: var(--text); background: #f0faff; outline: none;
+    transition: border-color 0.2s;
+  }
+  .bottom-card input:focus { border-color: var(--sky); }
+  .reload-btn {
+    background: linear-gradient(135deg, var(--sky), var(--ocean));
+    color: white; border: none; padding: 8px 18px;
+    border-radius: 10px; font-size: 13px; font-weight: 700;
+    font-family: 'Nunito', sans-serif; cursor: pointer;
+    box-shadow: 0 3px 10px rgba(2,119,189,0.3);
+    transition: transform 0.15s; white-space: nowrap;
+  }
+  .reload-btn:hover { transform: translateY(-2px); }
+
+  .empty-msg {
+    text-align: center; padding: 40px 20px;
+    color: var(--text-light); font-size: 14px;
+  }
+  .empty-msg .e { font-size: 40px; display: block; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="header-icon">🚗</span>
+  <h1>旅遊行程導航</h1>
+  <p>點擊地點即可開啟 Google Maps 汽車導航</p>
+</header>
+
+<div class="day-tabs" id="dayTabs">
+  <div class="day-tab skeleton">載入中...</div>
+</div>
+
+<div class="status" id="status"></div>
+<div class="content" id="content"></div>
+
+<!-- Sheet ID at bottom -->
+<div class="bottom-bar">
+  <div class="bottom-card">
+    <div style="flex:1; min-width:160px;">
+      <label>試算表 ID</label>
+      <input type="text" id="sheetId" value="1Ui5PbkexOcy7Y6p-X-XX3aAQCmuh16W9aiWWm5HqQJA" placeholder="Google 試算表 ID">
+    </div>
+    <button class="reload-btn" onclick="loadSheet()">🔄 重新載入</button>
+  </div>
+</div>
+
+<script>
+const ICON_RULES = [
+  { keys: ['早餐','早點','早午餐'], icon: '🍳' },
+  { keys: ['午餐','中餐'], icon: '🍱' },
+  { keys: ['晚餐','晚點'], icon: '🍽️' },
+  { keys: ['餐廳','餐館','小吃','豆腐','海鮮','滷肉','牛肉','火鍋','燒烤','壽司','拉麵','麵','飯館','食堂','茶館','咖啡','甜點','飲料','冰淇淋','刨冰','卜肉'], icon: '🍽️' },
+  { keys: ['超商','超市','便利','全家','萊爾富'], icon: '🏪' },
+  { keys: ['牛排'], icon: '🥩' },
+  { keys: ['烤雞'], icon: '🍗' },
+  { keys: ['民宿','飯店','旅館','旅宿','住宿','check in','check-in','入住','hotel'], icon: '🏘️' },
+  { keys: ['家'], icon: '🏠' },
+  { keys: ['休息站','服務區'], icon: '🛣️' },
+  { keys: ['停車','車站','火車','高鐵','捷運','機場'], icon: '🚂' },
+  { keys: ['地熱'], icon: '♨️' },
+  { keys: ['水產'], icon: '🐟' },
+  { keys: ['冬山河'], icon: '🏞️' },
+  { keys: ['森林','林場','林業','竹林','樹'], icon: '🌲' },
+  { keys: ['公園','生態','綠地','綠洲','植物園'], icon: '🌿' },
+  { keys: ['海','港','漁','沙灘','海岸','海邊','潮','礁'], icon: '🌊' },
+  { keys: ['湖','潭','水庫','溪','瀑布','溫泉','泡湯','浴'], icon: '🏞️' },
+  { keys: ['山','嶺','峰','步道','登山','健行'], icon: '🌾' },
+  { keys: ['農場','農業','果園','採果','採草莓','牧場','田園'], icon: '🐑' },
+  { keys: ['花','賞花','花園','玫瑰','薰衣草'], icon: '🌸' },
+  { keys: ['鳥'], icon: '🐣' },
+  { keys: ['林鐵'], icon: '🛤️' },
+  { keys: ['三星青蔥'], icon: '🥬' },
+  { keys: ['廟','寺','宮','神社','教堂','佛'], icon: '⛩️' },
+  { keys: ['古蹟','老街','歷史','傳統','文物','博物館','紀念館'], icon: '🏛️' },
+  { keys: ['創意','園區','藝文','美術','藝術'], icon: '📜' },
+  { keys: ['夜市','市集','市場'], icon: '🏮' },
+  { keys: ['遊樂','樂園','主題'], icon: '🎠' },
+  { keys: ['滑','溜','漂流','泛舟','衝浪','獨木舟'], icon: '🏄' },
+  { keys: ['腳踏車','單車','自行車'], icon: '🚴' },
+  { keys: ['觀光','展望','景觀台','瞭望'], icon: '🔭' },
+  { keys: ['購物','商場','百貨'], icon: '🛍️' },
+  { keys: ['全聯'], icon: '🛒' },
+  { keys: [], icon: '📍' },
+];
+
+function getIcon(name) {
+  const n = (name || '').toLowerCase();
+  for (const rule of ICON_RULES) {
+    if (rule.keys.length === 0) return rule.icon;
+    if (rule.keys.some(k => n.includes(k.toLowerCase()))) return rule.icon;
+  }
+  return '📍';
+}
+
+const DAY_COLS = [
+  { place: 0, nav: 1, note: 2 },
+  { place: 4, nav: 5, note: 6 },
+  { place: 8, nav: 9, note: 10 },
+];
+
+let allDays = [];
+let activeDay = 0;
+
+function normDate(str) {
+  const full = str.match(/\d{4}[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+  if (full) return `${parseInt(full[1])}/${parseInt(full[2])}`;
+  const md = str.match(/^(\d{1,2})[\/\-](\d{1,2})/);
+  if (md) return `${parseInt(md[1])}/${parseInt(md[2])}`;
+  return str;
+}
+function todayKey() {
+  const d = new Date();
+  return `${d.getMonth()+1}/${d.getDate()}`;
+}
+function findTodayIndex() {
+  const today = todayKey();
+  const idx = allDays.findIndex(d => normDate(d.date) === today);
+  return idx >= 0 ? idx : 0;
+}
+
+function storageKey() {
+  const d = new Date();
+  return `visited_${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function getVisited() {
+  try { return JSON.parse(localStorage.getItem(storageKey()) || '[]'); } catch { return []; }
+}
+function markVisited(id) {
+  try {
+    const v = getVisited();
+    if (!v.includes(id)) { v.push(id); localStorage.setItem(storageKey(), JSON.stringify(v)); }
+  } catch {}
+}
+function makeCardId(dayIdx, placeName) { return `d${dayIdx}_${placeName}`; }
+
+function buildMapsUrl(dest) {
+  return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent((dest || '').trim())}&travelmode=driving`;
+}
+function esc(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function renderTabs() {
+  const tabs = document.getElementById('dayTabs');
+  tabs.innerHTML = '';
+  allDays.forEach((day, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'day-tab' + (i === activeDay ? ' active' : '');
+    btn.innerHTML = `<div>第 ${i+1} 天</div><div class="tab-date">${esc(day.date)}</div>`;
+    btn.onclick = () => switchDay(i);
+    tabs.appendChild(btn);
+  });
+}
+
+function switchDay(idx) {
+  activeDay = idx;
+  renderTabs();
+  renderCards();
+}
+
+function renderCards() {
+  const content = document.getElementById('content');
+  const day = allDays[activeDay];
+  if (!day || day.places.length === 0) {
+    content.innerHTML = '<div class="empty-msg"><span class="e">🗺️</span>這天沒有行程資料</div>';
+    return;
+  }
+  content.innerHTML = '';
+  const visited = getVisited();
+
+  day.places.forEach((item, i) => {
+    const dest        = item.nav || item.place;
+    const displayName = item.place || item.nav;
+    const cardId      = makeCardId(activeDay, displayName);
+    const isVisited   = visited.includes(cardId);
+
+    const card = document.createElement('div');
+    card.className = 'place-card' + (isVisited ? ' visited' : '');
+    card.style.animationDelay = `${i * 0.05}s`;
+
+    card.innerHTML = `
+      <div class="card-icon">${getIcon(displayName)}</div>
+      <div class="card-body">
+        <div class="card-place">${esc(displayName)}</div>
+        ${item.note ? `<div class="card-note">📝 ${esc(item.note)}</div>` : ''}
+      </div>
+      ${isVisited ? '<span class="visited-check">✓</span>' : ''}
+      <div class="card-arrow">›</div>
+    `;
+
+    // 點擊：導航 + 標記已拜訪
+    card.addEventListener('click', () => {
+      markVisited(cardId);
+      window.open(buildMapsUrl(dest), '_blank', 'noopener');
+      setTimeout(() => {
+        card.classList.add('visited');
+        if (!card.querySelector('.visited-check')) {
+          const s = document.createElement('span');
+          s.className = 'visited-check'; s.textContent = '✓';
+          card.insertBefore(s, card.querySelector('.card-arrow'));
+        }
+        card.querySelector('.card-place').style.textDecoration = 'line-through';
+      }, 300);
+    });
+
+    content.appendChild(card);
+  });
+}
+
+async function loadSheet() {
+  const sheetId = document.getElementById('sheetId').value.trim();
+  const status  = document.getElementById('status');
+  const tabs    = document.getElementById('dayTabs');
+  const content = document.getElementById('content');
+
+  if (!sheetId) {
+    status.textContent = '請輸入試算表 ID';
+    status.className = 'status error';
+    return;
+  }
+
+  tabs.innerHTML = '<div class="day-tab skeleton">載入中...</div>';
+  content.innerHTML = '';
+  status.innerHTML = '<span class="spinner"></span>讀取行程資料中...';
+  status.className = 'status loading';
+
+  const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
+
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('無法讀取試算表，請確認已設為公開');
+    const text = await res.text();
+    const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/);
+    if (!match) throw new Error('試算表回傳格式不正確，請確認工作表存在且已公開');
+    const json = JSON.parse(match[1]);
+    const rows = json.table.rows;
+
+    if (!rows || rows.length < 2) throw new Error('試算表內沒有資料');
+
+    const headerRow = rows[0];
+    const dataRows  = rows.slice(1);
+    allDays = [];
+
+    DAY_COLS.forEach((cols) => {
+      const dc = headerRow.c[cols.place];
+      const dateVal = dc && dc.v ? String(dc.v).trim() : '';
+      if (!dateVal) return;
+
+      const places = [];
+      dataRows.forEach(row => {
+        const pc = row.c?.[cols.place];
+        const nc = row.c?.[cols.nav];
+        const tc = row.c?.[cols.note];
+        const place = pc?.v ? String(pc.v).trim() : '';
+        const nav   = nc?.v ? String(nc.v).trim() : '';
+        const note  = tc?.v ? String(tc.v).trim() : '';
+        if (place || nav) places.push({ place, nav, note });
+      });
+
+      allDays.push({ date: dateVal, places });
+    });
+
+    if (allDays.length === 0) throw new Error('找不到任何行程資料');
+
+    activeDay = findTodayIndex();
+    let total = allDays.reduce((s, d) => s + d.places.length, 0);
+    status.textContent = `✅ 已載入 ${allDays.length} 天、${total} 個地點`;
+    status.className = 'status';
+
+    renderTabs();
+    renderCards();
+
+  } catch(e) {
+    status.textContent = `❌ ${e.message}`;
+    status.className = 'status error';
+    tabs.innerHTML = '';
+  }
+}
+
+window.addEventListener('DOMContentLoaded', loadSheet);
+</script>
+</body>
+</html>
