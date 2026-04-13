@@ -168,10 +168,28 @@
   .place-card.visited .card-place {
     text-decoration: line-through; color: var(--text-light);
   }
-  .visited-check {
-    position: absolute; right: 44px; top: 50%;
-    transform: translateY(-50%);
-    font-size: 15px; color: #66bb6a; font-weight: 900;
+
+  /* ── Checkbox ── */
+  .card-check {
+    flex-shrink: 0;
+    width: 26px; height: 26px;
+    appearance: none; -webkit-appearance: none;
+    border: 2px solid #b3e5fc;
+    border-radius: 8px;
+    background: #f0faff;
+    cursor: pointer;
+    position: relative;
+    transition: background 0.18s, border-color 0.18s;
+  }
+  .card-check:checked {
+    background: linear-gradient(135deg, var(--sky), var(--ocean));
+    border-color: transparent;
+  }
+  .card-check:checked::after {
+    content: '✓';
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 14px; font-weight: 900;
   }
 
   /* ── Bottom config ── */
@@ -315,18 +333,18 @@ function findTodayIndex() {
   return idx >= 0 ? idx : 0;
 }
 
-function storageKey() {
-  const d = new Date();
-  return `visited_${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-}
+// ── 已勾選記錄（永久保存，不自動清除）──
 function getVisited() {
-  try { return JSON.parse(localStorage.getItem(storageKey()) || '[]'); } catch { return []; }
+  try { return JSON.parse(localStorage.getItem('visited_places') || '[]'); } catch { return []; }
 }
-function markVisited(id) {
+function toggleVisited(id) {
   try {
     const v = getVisited();
-    if (!v.includes(id)) { v.push(id); localStorage.setItem(storageKey(), JSON.stringify(v)); }
-  } catch {}
+    const idx = v.indexOf(id);
+    if (idx === -1) { v.push(id); } else { v.splice(idx, 1); }
+    localStorage.setItem('visited_places', JSON.stringify(v));
+    return idx === -1; // true = 剛勾選, false = 取消勾選
+  } catch { return false; }
 }
 function makeCardId(dayIdx, placeName) { return `d${dayIdx}_${placeName}`; }
 
@@ -381,23 +399,23 @@ function renderCards() {
         <div class="card-place">${esc(displayName)}</div>
         ${item.note ? `<div class="card-note">📝 ${esc(item.note)}</div>` : ''}
       </div>
-      ${isVisited ? '<span class="visited-check">✓</span>' : ''}
+      <input type="checkbox" class="card-check" ${isVisited ? 'checked' : ''}>
       <div class="card-arrow">›</div>
     `;
 
-    // 點擊：導航 + 標記已拜訪
-    card.addEventListener('click', () => {
-      markVisited(cardId);
+    // checkbox：勾選/取消，不觸發導航
+    const cb = card.querySelector('.card-check');
+    cb.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleVisited(cardId);
+      card.classList.toggle('visited', cb.checked);
+      card.querySelector('.card-place').style.textDecoration = cb.checked ? 'line-through' : '';
+    });
+
+    // 點卡片其他區域：導航
+    card.addEventListener('click', (e) => {
+      if (e.target === cb) return;
       window.open(buildMapsUrl(dest), '_blank', 'noopener');
-      setTimeout(() => {
-        card.classList.add('visited');
-        if (!card.querySelector('.visited-check')) {
-          const s = document.createElement('span');
-          s.className = 'visited-check'; s.textContent = '✓';
-          card.insertBefore(s, card.querySelector('.card-arrow'));
-        }
-        card.querySelector('.card-place').style.textDecoration = 'line-through';
-      }, 300);
     });
 
     content.appendChild(card);
