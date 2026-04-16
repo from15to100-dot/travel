@@ -1,7 +1,9 @@
 {
+  "id": "./index.html",
   "name": "旅遊行程導航",
   "short_name": "旅遊導航",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#e0f7fa",
   "theme_color": "#0277bd",
