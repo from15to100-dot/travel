@@ -358,6 +358,23 @@ function makeCardId(dayIdx, placeName) { return `d${dayIdx}_${placeName}`; }
 function buildMapsUrl(dest) {
   return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent((dest || '').trim())}&travelmode=driving`;
 }
+
+function isIOSLike() {
+  const ua = navigator.userAgent || '';
+  const platform = navigator.platform || '';
+  const touchMac = platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+  return /iPhone|iPad|iPod/i.test(ua) || touchMac;
+}
+
+function openNavigation(dest) {
+  const url = buildMapsUrl(dest);
+  if (isIOSLike()) {
+    window.location.href = url;
+    return;
+  }
+  window.open(url, '_blank', 'noopener');
+}
+
 function esc(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
@@ -422,7 +439,7 @@ function renderCards() {
     // 點卡片其他區域：導航
     card.addEventListener('click', (e) => {
       if (e.target === cb) return;
-      window.location.href = buildMapsUrl(dest);
+      openNavigation(dest);
     });
 
     content.appendChild(card);

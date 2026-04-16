@@ -662,6 +662,23 @@ function clearAllExpenses() {
 function buildMapsUrl(dest) {
   return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent((dest || '').trim())}&travelmode=driving`;
 }
+
+function isIOSLike() {
+  const ua = navigator.userAgent || '';
+  const platform = navigator.platform || '';
+  const touchMac = platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+  return /iPhone|iPad|iPod/i.test(ua) || touchMac;
+}
+
+function openNavigation(dest) {
+  const url = buildMapsUrl(dest);
+  if (isIOSLike()) {
+    window.location.href = url;
+    return;
+  }
+  window.open(url, '_blank', 'noopener');
+}
+
 function esc(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
@@ -698,7 +715,7 @@ function markCardVisitedUI(card) {
 function navigateToPlace(dest, cardId, card) {
   markVisited(cardId);
   if (card) markCardVisitedUI(card);
-  window.location.href = buildMapsUrl(dest);
+  openNavigation(dest);
 }
 
 function renderCards() {
