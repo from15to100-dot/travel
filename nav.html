@@ -321,6 +321,7 @@ const DAY_COLS = [
 
 let allDays = [];
 let activeDay = 0;
+let isLoadingSheet = false;
 
 function normDate(str) {
   const full = str.match(/\d{4}[\/\-](\d{1,2})[\/\-](\d{1,2})/);
@@ -429,6 +430,9 @@ function renderCards() {
 }
 
 async function loadSheet() {
+  if (isLoadingSheet) return;
+
+  isLoadingSheet = true;
   const sheetId = document.getElementById('sheetId').value.trim();
   const status  = document.getElementById('status');
   const tabs    = document.getElementById('dayTabs');
@@ -437,6 +441,7 @@ async function loadSheet() {
   if (!sheetId) {
     status.textContent = '請輸入試算表 ID';
     status.className = 'status error';
+    isLoadingSheet = false;
     return;
   }
 
@@ -495,14 +500,32 @@ async function loadSheet() {
     status.textContent = `❌ ${e.message}`;
     status.className = 'status error';
     tabs.innerHTML = '';
+  } finally {
+    isLoadingSheet = false;
   }
 }
 
 window.addEventListener('DOMContentLoaded', loadSheet);
 
-// iOS PWA 從外部 App 返回時，偵測到 bfcache 恢復就強制重新載入
-window.addEventListener('pageshow', (e) => {
-  if (e.persisted) window.location.reload();
+function restorePageState() {
+  const content = document.getElementById('content');
+
+  if (allDays.length > 0) {
+    renderTabs();
+    if (!content.children.length) renderCards();
+    return;
+  }
+
+  if (!isLoadingSheet) loadSheet();
+}
+
+// iOS PWA 從外部 App 返回時避免直接 reload，先重繪現有畫面，不足時再補抓資料
+window.addEventListener('pageshow', () => {
+  requestAnimationFrame(restorePageState);
+});
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) requestAnimationFrame(restorePageState);
 });
 </script>
 </body>
