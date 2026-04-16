@@ -422,7 +422,7 @@ function renderCards() {
     // 點卡片其他區域：導航
     card.addEventListener('click', (e) => {
       if (e.target === cb) return;
-      window.open(buildMapsUrl(dest), '_blank', 'noopener');
+      window.location.href = buildMapsUrl(dest);
     });
 
     content.appendChild(card);

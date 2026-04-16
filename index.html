@@ -698,7 +698,7 @@ function markCardVisitedUI(card) {
 function navigateToPlace(dest, cardId, card) {
   markVisited(cardId);
   if (card) markCardVisitedUI(card);
-  window.open(buildMapsUrl(dest), '_blank', 'noopener');
+  window.location.href = buildMapsUrl(dest);
 }
 
 function renderCards() {
