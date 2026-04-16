@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>旅遊行程導航</title>
-<link rel="manifest" href="manifest-index.json">
+<link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -818,6 +818,10 @@ async function loadSheet() {
   }
 }
 
+// iOS PWA 從外部 App 返回時，偵測到 bfcache 恢復就強制重新載入
+window.addEventListener('pageshow', (e) => {
+  if (e.persisted) window.location.reload();
+});
 
 </script>
 </body>
