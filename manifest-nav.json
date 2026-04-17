@@ -1,7 +1,7 @@
 {
   "id": "./nav.html",
-  "name": "旅遊行程導航",
-  "short_name": "旅遊導航",
+  "name": "王家旅遊",
+  "short_name": "王家旅遊",
   "start_url": "./nav.html",
   "scope": "./",
   "display": "standalone",
