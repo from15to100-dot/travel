@@ -492,7 +492,7 @@ async function loadSheet() {
 
     DAY_COLS.forEach((cols) => {
       const dc = headerRow.c[cols.place];
-      const dateVal = dc && dc.v ? String(dc.v).trim() : '';
+      const dateVal = dc ? String(dc.f || dc.v || '').trim() : '';
       if (!dateVal) return;
 
       const places = [];
