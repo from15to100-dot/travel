@@ -801,28 +801,57 @@ async function loadSheet() {
     const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/);
     if (!match) throw new Error('試算表回傳格式不正確，請確認工作表存在且已公開');
     const json = JSON.parse(match[1]);
-    const rows = json.table.rows;
+    const table = json.table;
+    const cols  = table.cols || [];
+    const rows  = table.rows;
 
-    if (!rows || rows.length < 2) throw new Error('試算表內沒有資料');
+    if (!rows || rows.length < 1) throw new Error('試算表內沒有資料');
 
-    const headerRow = rows[0];
-    const dataRows  = rows.slice(1);
+    function getDateFromCol(colIndex) {
+      const col = cols[colIndex];
+      if (!col) return '';
+      return (col.label || '').trim();
+    }
+
+    const firstColLabel = cols[0] ? (cols[0].label || '') : '';
+    const hasColHeader  = /\d{4}|\d+\/\d+/.test(firstColLabel);
+
+    let headerRow, dataRows;
+    if (hasColHeader) {
+      headerRow = null;
+      dataRows  = rows;
+    } else {
+      headerRow = rows[0];
+      dataRows  = rows.slice(1);
+    }
 
     allDays = [];
 
-    DAY_COLS.forEach((cols) => {
-      const dc = headerRow.c[cols.place];
-      const dateVal = dc ? String(dc.f || dc.v || '').trim() : '';
+    DAY_COLS.forEach((cols2) => {
+      let dateVal = '';
+
+      if (hasColHeader) {
+        dateVal = getDateFromCol(cols2.place);
+      } else {
+        const dc = headerRow.c[cols2.place];
+        dateVal = dc ? String(dc.f || dc.v || '').trim() : '';
+      }
+
+      if (dateVal && /^\d{4,6}$/.test(dateVal)) {
+        const d = new Date(Math.round((Number(dateVal) - 25569) * 86400 * 1000));
+        dateVal = `${d.getUTCMonth()+1}/${d.getUTCDate()}`;
+      }
+
       if (!dateVal) return;
 
       const places = [];
       dataRows.forEach(row => {
-        const pc = row.c?.[cols.place];
-        const nc = row.c?.[cols.nav];
-        const tc = row.c?.[cols.note];
-        const place = pc?.v ? String(pc.v).trim() : '';
-        const nav   = nc?.v ? String(nc.v).trim() : '';
-        const note  = tc?.v ? String(tc.v).trim() : '';
+        const pc = row.c?.[cols2.place];
+        const nc = row.c?.[cols2.nav];
+        const tc = row.c?.[cols2.note];
+        const place = pc?.v ? String(pc.f || pc.v).trim() : '';
+        const nav   = nc?.v ? String(nc.f || nc.v).trim() : '';
+        const note  = tc?.v ? String(tc.f || tc.v).trim() : '';
         if (place || nav) places.push({ place, nav, note });
       });
 
