@@ -492,7 +492,13 @@ async function loadSheet() {
 
     DAY_COLS.forEach((cols) => {
       const dc = headerRow.c[cols.place];
-      const dateVal = dc ? String(dc.f || dc.v || '').trim() : '';
+      let dateVal = dc ? String(dc.f || dc.v || '').trim() : '';
+      // gviz 有時對日期 Smart Chip 只回傳數字序列（如 45766）
+      // 判斷是否為純數字，若是則轉成 M/D 格式
+      if (dateVal && /^\d{4,6}$/.test(dateVal)) {
+        const d = new Date(Math.round((Number(dateVal) - 25569) * 86400 * 1000));
+        dateVal = `${d.getUTCMonth()+1}/${d.getUTCDate()}`;
+      }
       if (!dateVal) return;
 
       const places = [];
