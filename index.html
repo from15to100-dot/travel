@@ -811,7 +811,7 @@ async function loadSheet() {
     allDays = [];
 
     DAY_COLS.forEach((cols) => {
-      const dc = headerRow.c[cols.place]
+      const dc = headerRow.c[cols.place];
       const dateVal = dc ? String(dc.f || dc.v || '').trim() : '';
       if (!dateVal) return;
 
